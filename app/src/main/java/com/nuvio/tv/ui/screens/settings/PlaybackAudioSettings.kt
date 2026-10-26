@@ -1,6 +1,9 @@
 package com.nuvio.tv.ui.screens.settings
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.nuvio.tv.R
@@ -15,7 +18,9 @@ import com.nuvio.tv.data.local.displayName
 internal fun PlaybackAudioSection(
     settings: PlayerSettings,
     onUpdate: PlaybackSettingsUpdate,
-    onOpenDialog: (PlaybackDialog) -> Unit
+    onOpenDialog: (PlaybackDialog) -> Unit,
+    onOpenAudioSyncCalibration: () -> Unit,
+    calibrationFocusRequester: FocusRequester
 ) {
     val enabled = settings.playerPreference != PlayerPreference.EXTERNAL
     val isExoEngine = settings.usesExoPlayerEngine
@@ -53,6 +58,15 @@ internal fun PlaybackAudioSection(
         checked = settings.rememberAudioDelayPerDevice,
         onToggle = { onUpdate { setRememberAudioDelayPerDevice(!settings.rememberAudioDelayPerDevice) } },
         enabled = enabled
+    )
+
+    SettingsActionRow(
+        title = stringResource(R.string.audio_sync_calibration_title),
+        subtitle = stringResource(R.string.audio_sync_calibration_subtitle),
+        value = stringResource(R.string.audio_sync_calibration_action),
+        enabled = enabled,
+        onClick = onOpenAudioSyncCalibration,
+        modifier = Modifier.focusRequester(calibrationFocusRequester)
     )
 
     if (!isExoEngine) return

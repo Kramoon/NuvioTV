@@ -1,9 +1,11 @@
 package com.nuvio.tv.ui.screens.settings
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.util.UnstableApi
 import com.nuvio.tv.core.plugin.PluginManager
 import com.nuvio.tv.data.local.DeviceLocalPlayerPreferences
+import com.nuvio.tv.data.local.AudioDelayRouteDataStore
 import com.nuvio.tv.data.local.LibassRenderScale
 import com.nuvio.tv.data.local.LibassRenderType
 import com.nuvio.tv.data.local.InternalPlayerEngine
@@ -33,6 +35,9 @@ import com.nuvio.tv.core.torrent.TorrentState
 import com.nuvio.tv.data.local.VodCacheSizeMode
 import com.nuvio.tv.domain.model.enabledAddons
 import com.nuvio.tv.domain.repository.AddonRepository
+import com.nuvio.tv.ui.screens.player.AudioOutputRoute
+import com.nuvio.tv.ui.screens.player.AudioOutputRouteDetector
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,7 +48,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PlaybackSettingsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val playerSettingsDataStore: PlayerSettingsDataStore,
+    private val audioDelayRouteDataStore: AudioDelayRouteDataStore,
     private val deviceLocalPlayerPreferences: DeviceLocalPlayerPreferences,
     private val trailerSettingsDataStore: TrailerSettingsDataStore,
     private val addonRepository: AddonRepository,
@@ -149,6 +156,15 @@ class PlaybackSettingsViewModel @Inject constructor(
 
     suspend fun setRememberAudioDelayPerDevice(enabled: Boolean) {
         playerSettingsDataStore.setRememberAudioDelayPerDevice(enabled)
+    }
+
+    internal fun detectActiveAudioRoute(): AudioOutputRoute? = AudioOutputRouteDetector.detect(context)
+
+    suspend fun getAudioDelayForRoute(routeKey: String): Int =
+        audioDelayRouteDataStore.loadDelayMs(routeKey) ?: 0
+
+    suspend fun saveAudioDelayForRoute(routeKey: String, delayMs: Int) {
+        audioDelayRouteDataStore.saveDelayMs(routeKey, delayMs)
     }
 
     suspend fun setPreferredAudioLanguage(language: String) {

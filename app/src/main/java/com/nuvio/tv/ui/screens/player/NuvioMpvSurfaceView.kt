@@ -342,6 +342,15 @@ class NuvioMpvSurfaceView @JvmOverloads constructor(
         }
     }
 
+    fun setLoopFileEnabled(enabled: Boolean) {
+        if (!initialized) return
+        runCatching {
+            mpv.setPropertyString("loop-file", if (enabled) "inf" else "no")
+        }.onFailure {
+            Log.w(TAG, "Failed to set mpv loop-file (enabled=$enabled): ${it.message}")
+        }
+    }
+
     /**
      * Bluetooth A2DP/LE cannot carry encoded passthrough. Force a stereo PCM mix.
      * Mid-session route changes pass [reloadOutput] so AudioTrack follows the new device

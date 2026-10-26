@@ -179,6 +179,7 @@ fun SettingsScreen(
     onNavigateToSupportersContributors: () -> Unit = {},
     onNavigateToLicensesAttributions: () -> Unit = {},
     onNavigateToWatchParty: () -> Unit = {},
+    onNavigateToAudioSyncCalibration: () -> Unit = {},
     profileViewModel: ProfileSettingsViewModel = hiltViewModel(),
     experienceModeViewModel: ExperienceModeSettingsViewModel = hiltViewModel(),
     partyViewModel: PartyViewModel = hiltViewModel()
@@ -661,7 +662,8 @@ fun SettingsScreen(
                                 onNavigateToAuthQrSignIn = onNavigateToAuthQrSignIn,
                                 onNavigateToSupportersContributors = onNavigateToSupportersContributors,
                                 onNavigateToLicensesAttributions = onNavigateToLicensesAttributions,
-                                onNavigateToWatchParty = onNavigateToWatchParty
+                                onNavigateToWatchParty = onNavigateToWatchParty,
+                                onNavigateToAudioSyncCalibration = onNavigateToAudioSyncCalibration
                             )
                         }
                     }
@@ -821,7 +823,8 @@ fun SettingsScreen(
                         onNavigateToAuthQrSignIn = onNavigateToAuthQrSignIn,
                         onNavigateToSupportersContributors = onNavigateToSupportersContributors,
                         onNavigateToLicensesAttributions = onNavigateToLicensesAttributions,
-                        onNavigateToWatchParty = onNavigateToWatchParty
+                        onNavigateToWatchParty = onNavigateToWatchParty,
+                        onNavigateToAudioSyncCalibration = onNavigateToAudioSyncCalibration
                     )
                 }
             }
@@ -851,7 +854,8 @@ private fun SettingsDetailPane(
     onNavigateToAuthQrSignIn: () -> Unit,
     onNavigateToSupportersContributors: () -> Unit,
     onNavigateToLicensesAttributions: () -> Unit,
-    onNavigateToWatchParty: () -> Unit
+    onNavigateToWatchParty: () -> Unit,
+    onNavigateToAudioSyncCalibration: () -> Unit
 ) {
     when (selectedCategory) {
         SettingsCategory.EXPERIENCE -> EssentialAdvancedSettingsContent(
@@ -907,7 +911,8 @@ private fun SettingsDetailPane(
                     contentFocusRequesters[SettingsCategory.PLAYBACK]
                 } else {
                     null
-                }
+                },
+                onOpenAudioSyncCalibration = onNavigateToAudioSyncCalibration
             )
         }
         SettingsCategory.ADVANCED -> if (isEssentialMode) {

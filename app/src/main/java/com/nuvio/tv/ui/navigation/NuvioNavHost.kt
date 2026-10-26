@@ -45,6 +45,7 @@ import com.nuvio.tv.ui.screens.plugin.PluginScreen
 import com.nuvio.tv.ui.screens.search.DiscoverScreen
 import com.nuvio.tv.ui.screens.search.SearchScreen
 import com.nuvio.tv.ui.screens.settings.AboutScreen
+import com.nuvio.tv.ui.screens.settings.AudioSyncCalibrationScreen
 import com.nuvio.tv.ui.screens.settings.LayoutSettingsScreen
 import com.nuvio.tv.ui.screens.settings.LicensesAttributionsScreen
 import com.nuvio.tv.ui.screens.settings.PlaybackSettingsScreen
@@ -1257,7 +1258,10 @@ private fun PlaybackNavHost(
                 onNavigateToLicensesAttributions = {
                     navController.navigate(Screen.LicensesAttributions.route)
                 },
-                onNavigateToWatchParty = { navController.navigate(Screen.WatchParty.createRoute()) }
+                onNavigateToWatchParty = { navController.navigate(Screen.WatchParty.createRoute()) },
+                onNavigateToAudioSyncCalibration = {
+                    navController.navigate(Screen.AudioSyncCalibration.route)
+                }
             )
         }
 
@@ -1285,6 +1289,12 @@ private fun PlaybackNavHost(
             )
         }
 
+        composable(Screen.AudioSyncCalibration.route) {
+            AudioSyncCalibrationScreen(
+                onBackPress = { navController.popBackStack() }
+            )
+        }
+
         composable(Screen.Tracking.route) {
             TrackingSettingsScreen(
                 onBackPress = { navController.popBackStack() }
@@ -1305,7 +1315,10 @@ private fun PlaybackNavHost(
 
         composable(Screen.PlaybackSettings.route) {
             PlaybackSettingsScreen(
-                onBackPress = { navController.popBackStack() }
+                onBackPress = { navController.popBackStack() },
+                onOpenAudioSyncCalibration = {
+                    navController.navigate(Screen.AudioSyncCalibration.route)
+                }
             )
         }
 

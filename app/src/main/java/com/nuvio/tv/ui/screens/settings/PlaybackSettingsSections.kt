@@ -32,6 +32,8 @@ internal fun PlaybackSettingsSections(
     transparentLetterbox: Boolean,
     onUpdate: PlaybackSettingsUpdate,
     onOpenDialog: (PlaybackDialog) -> Unit,
+    onOpenAudioSyncCalibration: () -> Unit,
+    calibrationFocusRequester: FocusRequester,
     onMemorySettingChanged: () -> Unit,
     onClearTorrentCache: () -> Unit,
     initialFocusRequester: FocusRequester? = null
@@ -71,6 +73,8 @@ internal fun PlaybackSettingsSections(
                         transparentLetterbox = transparentLetterbox,
                         onUpdate = onUpdate,
                         onOpenDialog = onOpenDialog,
+                        onOpenAudioSyncCalibration = onOpenAudioSyncCalibration,
+                        calibrationFocusRequester = calibrationFocusRequester,
                         onMemorySettingChanged = onMemorySettingChanged,
                         onClearTorrentCache = onClearTorrentCache
                     )
@@ -89,6 +93,8 @@ private fun PlaybackSectionContent(
     transparentLetterbox: Boolean,
     onUpdate: PlaybackSettingsUpdate,
     onOpenDialog: (PlaybackDialog) -> Unit,
+    onOpenAudioSyncCalibration: () -> Unit,
+    calibrationFocusRequester: FocusRequester,
     onMemorySettingChanged: () -> Unit,
     onClearTorrentCache: () -> Unit
 ) {
@@ -98,7 +104,13 @@ private fun PlaybackSectionContent(
         PlaybackSection.UP_NEXT -> PlaybackUpNextSection(playerSettings, onUpdate, onOpenDialog)
         PlaybackSection.SKIP_SEGMENTS -> PlaybackSkipSegmentsSection(playerSettings, onUpdate)
         PlaybackSection.PLAYER_INTERFACE -> PlaybackPlayerInterfaceSection(playerSettings, onUpdate)
-        PlaybackSection.AUDIO -> PlaybackAudioSection(playerSettings, onUpdate, onOpenDialog)
+        PlaybackSection.AUDIO -> PlaybackAudioSection(
+            playerSettings,
+            onUpdate,
+            onOpenDialog,
+            onOpenAudioSyncCalibration,
+            calibrationFocusRequester
+        )
         PlaybackSection.SUBTITLES -> PlaybackSubtitlesSection(playerSettings, onUpdate, onOpenDialog)
         PlaybackSection.VIDEO -> PlaybackVideoSection(playerSettings, transparentLetterbox, onUpdate, onOpenDialog)
         PlaybackSection.BUFFER_NETWORK -> PlaybackBufferNetworkSection(playerSettings, onUpdate, onMemorySettingChanged)

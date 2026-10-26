@@ -9,19 +9,25 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.nuvio.tv.R
 import com.nuvio.tv.core.torrent.TorrentCacheClearResult
 import com.nuvio.tv.core.torrent.TorrentSettingsData
@@ -33,7 +39,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun PlaybackSettingsScreen(
     viewModel: PlaybackSettingsViewModel = hiltViewModel(),
-    onBackPress: () -> Unit = {}
+    onBackPress: () -> Unit = {},
+    onOpenAudioSyncCalibration: () -> Unit = {}
 ) {
     BackHandler { onBackPress() }
 
@@ -41,14 +48,18 @@ fun PlaybackSettingsScreen(
         title = stringResource(R.string.playback_title),
         subtitle = stringResource(R.string.playback_subtitle)
     ) {
-        PlaybackSettingsContent(viewModel = viewModel)
+        PlaybackSettingsContent(
+            viewModel = viewModel,
+            onOpenAudioSyncCalibration = onOpenAudioSyncCalibration
+        )
     }
 }
 
 @Composable
 fun PlaybackSettingsContent(
     viewModel: PlaybackSettingsViewModel = hiltViewModel(),
-    initialFocusRequester: FocusRequester? = null
+    initialFocusRequester: FocusRequester? = null,
+    onOpenAudioSyncCalibration: () -> Unit = {}
 ) {
     val playerSettings by viewModel.playerSettings.collectAsStateWithLifecycle(initialValue = PlayerSettings())
     val transparentLetterbox by viewModel.transparentLetterbox.collectAsStateWithLifecycle(initialValue = false)
@@ -77,6 +88,25 @@ fun PlaybackSettingsContent(
     val enabledPluginNames by viewModel.enabledPluginNames.collectAsStateWithLifecycle(initialValue = emptyList())
     val coroutineScope = rememberCoroutineScope()
     var openDialog by remember { mutableStateOf<PlaybackDialog?>(null) }
+    var restoreCalibrationFocus by remember { mutableStateOf(false) }
+    val calibrationFocusRequester = remember { FocusRequester() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val restoreFocusOnResume = rememberUpdatedState {
+        if (restoreCalibrationFocus) {
+            restoreCalibrationFocus = false
+            coroutineScope.launch {
+                delay(350)
+                calibrationFocusRequester.requestFocus()
+            }
+        }
+    }
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) restoreFocusOnResume.value()
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
     var memoryUsageTrigger by remember { mutableIntStateOf(0) }
     var showMemoryUsage by remember { mutableStateOf(false) }
     val onUpdate: PlaybackSettingsUpdate = remember(viewModel, coroutineScope) {
@@ -110,6 +140,11 @@ fun PlaybackSettingsContent(
                 transparentLetterbox = transparentLetterbox,
                 onUpdate = onUpdate,
                 onOpenDialog = { openDialog = it },
+                onOpenAudioSyncCalibration = {
+                    restoreCalibrationFocus = true
+                    onOpenAudioSyncCalibration()
+                },
+                calibrationFocusRequester = calibrationFocusRequester,
                 onMemorySettingChanged = { memoryUsageTrigger++ },
                 onClearTorrentCache = {
                     torrentCacheClearResult = null

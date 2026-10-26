@@ -19,9 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -59,45 +57,43 @@ fun DisplayModeOverlay(
 
     val containerAlpha = remember { Animatable(0f) }
     val lineHeightFraction = remember { Animatable(0f) }
-    val itemAlphas = remember(info) { List(count) { Animatable(0f) } }
-    var animating by remember { mutableStateOf(false) }
+    val itemAlphas = remember { List(count) { Animatable(0f) } }
 
     LaunchedEffect(isVisible, info) {
-        if (isVisible && !animating) {
-            animating = true
-
-            containerAlpha.animateTo(1f, tween(300))
-            lineHeightFraction.animateTo(1f, tween(400, easing = FastOutSlowInEasing))
-
-            for (i in 0 until count) {
-                delay(80)
-                itemAlphas[i].animateTo(1f, tween(200))
-            }
-
-            delay(5000)
-
-            for (i in (count - 1) downTo 0) {
-                delay(60)
-                itemAlphas[i].animateTo(0f, tween(150))
-            }
-
-            delay(100)
-            lineHeightFraction.animateTo(0f, tween(300, easing = FastOutSlowInEasing))
-
-            delay(200)
-            containerAlpha.animateTo(0f, tween(200))
-
-            animating = false
-            onAnimationComplete()
-        } else if (!isVisible && animating) {
-            for (i in (count - 1) downTo 0) {
-                itemAlphas[i].snapTo(0f)
-            }
-            lineHeightFraction.snapTo(0f)
+        if (!isVisible) {
             containerAlpha.snapTo(0f)
-            animating = false
-            onAnimationComplete()
+            lineHeightFraction.snapTo(0f)
+            itemAlphas.forEach { it.snapTo(0f) }
+            return@LaunchedEffect
         }
+
+        // A new display mode cancels this effect and starts it again. Reset all
+        // animation values so rapid frame-rate changes cannot leave the overlay stuck.
+        containerAlpha.snapTo(0f)
+        lineHeightFraction.snapTo(0f)
+        itemAlphas.forEach { it.snapTo(0f) }
+
+        containerAlpha.animateTo(1f, tween(300))
+        lineHeightFraction.animateTo(1f, tween(400, easing = FastOutSlowInEasing))
+
+        for (i in 0 until count) {
+            delay(80)
+            itemAlphas[i].animateTo(1f, tween(200))
+        }
+
+        delay(5000)
+
+        for (i in (count - 1) downTo 0) {
+            delay(60)
+            itemAlphas[i].animateTo(0f, tween(150))
+        }
+
+        delay(100)
+        lineHeightFraction.animateTo(0f, tween(300, easing = FastOutSlowInEasing))
+
+        delay(200)
+        containerAlpha.animateTo(0f, tween(200))
+        onAnimationComplete()
     }
 
     if (containerAlpha.value <= 0f) return
