@@ -64,6 +64,9 @@ import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.Border
 import androidx.tv.material3.Card
@@ -484,6 +487,7 @@ private fun ExoCalibrationVideo(
     DisposableEffect(player) {
         onDispose { player.release() }
     }
+    val playbackPaused = rememberCalibrationPlaybackPaused(isPaused) { player.pause() }
 
     LaunchedEffect(player, clip.resourceId, routeVersion) {
         val mediaItem = MediaItem.fromUri(RawResourceDataSource.buildRawResourceUri(clip.resourceId))
@@ -492,10 +496,10 @@ private fun ExoCalibrationVideo(
             AudioDelayMediaSource(childSource) { delayUs.get() }
         )
         player.prepare()
-        player.playWhenReady = !isPaused
+        player.playWhenReady = !playbackPaused
     }
 
-    LaunchedEffect(player, isPaused) { player.playWhenReady = !isPaused }
+    LaunchedEffect(player, playbackPaused) { player.playWhenReady = !playbackPaused }
 
     AndroidView(
         factory = {
@@ -544,6 +548,7 @@ private fun MpvCalibrationVideo(
             isFocusableInTouchMode = false
         }
     }
+    val playbackPaused = rememberCalibrationPlaybackPaused(isPaused) { view.setPaused(true) }
     AndroidView(
         factory = { view },
         update = { it.setAudioDelayMs(delayMs) },
@@ -554,12 +559,34 @@ private fun MpvCalibrationVideo(
         view.setLoopFileEnabled(true)
         view.applyBluetoothAudioRoute(isBluetoothRoute, reloadOutput = routeVersion > 0)
         view.setAudioDelayMs(delayMs)
-        view.setPaused(isPaused)
+        view.setPaused(playbackPaused)
     }
-    LaunchedEffect(view, isPaused) { view.setPaused(isPaused) }
+    LaunchedEffect(view, playbackPaused) { view.setPaused(playbackPaused) }
     DisposableEffect(view) {
         onDispose { view.releasePlayer() }
     }
+}
+
+@Composable
+private fun rememberCalibrationPlaybackPaused(isPaused: Boolean, onPause: () -> Unit): Boolean {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    var isResumed by remember(lifecycleOwner) {
+        mutableStateOf(lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED))
+    }
+    val latestOnPause by rememberUpdatedState(onPause)
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            isResumed = lifecycleOwner.lifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)
+            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
+                // Pause immediately, even if background recomposition is suspended.
+                latestOnPause()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+    // Lifecycle changes never overwrite the user's Pause/Resume choice.
+    return isPaused || !isResumed
 }
 
 @Composable
