@@ -182,6 +182,8 @@ import com.nuvio.tv.ui.components.LocalAlwaysBackdropWithLogo
 import com.nuvio.tv.ui.components.ProfileAvatarCircle
 import com.nuvio.tv.ui.navigation.LocalNavViewModelStoreOwner
 import com.nuvio.tv.ui.navigation.NuvioNavHost
+import com.nuvio.tv.ui.navigation.LibraryViewportPadding
+import com.nuvio.tv.ui.navigation.LocalLibraryViewportPadding
 import com.nuvio.tv.ui.navigation.Screen
 import com.nuvio.tv.ui.navigation.rememberNavSessionViewModelStoreOwner
 import com.nuvio.tv.ui.screens.party.PartyEffects
@@ -1699,7 +1701,11 @@ private fun LegacySidebarScaffold(
         ) {
             CompositionLocalProvider(
                 LocalSidebarExpanded provides (drawerState.currentValue == DrawerValue.Open),
-                LocalContentFocusRequester provides contentFocusRequester
+                LocalContentFocusRequester provides contentFocusRequester,
+                LocalLibraryViewportPadding provides LibraryViewportPadding(
+                    current = contentStartPadding,
+                    root = if (sidebarCollapsed) NuvioTheme.spacing.none else NuvioLayout.tokens.sidebarContentOffset
+                )
             ) {
                 NuvioNavHost(
                     navController = navController,

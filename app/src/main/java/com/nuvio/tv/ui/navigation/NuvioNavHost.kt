@@ -13,6 +13,9 @@ import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -1212,36 +1215,38 @@ private fun PlaybackNavHost(
         }
 
         composable(Screen.Library.route) {
-            LibraryScreen(
-                showBuiltInHeader = !hideBuiltInHeaders,
-                onNavigateToDetail = { itemId, itemType, addonBaseUrl ->
-                    navController.navigate(Screen.Detail.createRoute(itemId, itemType, addonBaseUrl))
-                },
-                onNavigateToCatalogSeeAll = { catalogId, addonId, type ->
-                    navController.navigate(Screen.CatalogSeeAll.createRoute(catalogId, addonId, type))
-                },
-                onCloudPlaybackResolved = { info ->
-                    val filename = info.filename ?: info.file.name
-                    navController.navigate(
-                        Screen.Player.createRoute(
-                            streamUrl = info.url,
-                            title = filename,
-                            streamName = filename,
-                            contentType = "cloud",
-                            contentName = info.item.name,
-                            videoId = "${info.item.stableKey}:${info.file.stableKey}",
-                            season = 1,
-                            episode = info.sequenceIndex + 1,
-                            episodeTitle = filename,
-                            filename = filename,
-                            videoSize = info.videoSizeBytes,
-                            addonName = info.item.providerName,
-                            streamDescription = info.item.name,
-                            cloudSessionToken = info.sessionToken
+            Box(Modifier.fillMaxSize().libraryViewportPadding(LocalLibraryViewportPadding.current)) {
+                LibraryScreen(
+                    showBuiltInHeader = !hideBuiltInHeaders,
+                    onNavigateToDetail = { itemId, itemType, addonBaseUrl ->
+                        navController.navigate(Screen.Detail.createRoute(itemId, itemType, addonBaseUrl))
+                    },
+                    onNavigateToCatalogSeeAll = { catalogId, addonId, type ->
+                        navController.navigate(Screen.CatalogSeeAll.createRoute(catalogId, addonId, type))
+                    },
+                    onCloudPlaybackResolved = { info ->
+                        val filename = info.filename ?: info.file.name
+                        navController.navigate(
+                            Screen.Player.createRoute(
+                                streamUrl = info.url,
+                                title = filename,
+                                streamName = filename,
+                                contentType = "cloud",
+                                contentName = info.item.name,
+                                videoId = "${info.item.stableKey}:${info.file.stableKey}",
+                                season = 1,
+                                episode = info.sequenceIndex + 1,
+                                episodeTitle = filename,
+                                filename = filename,
+                                videoSize = info.videoSizeBytes,
+                                addonName = info.item.providerName,
+                                streamDescription = info.item.name,
+                                cloudSessionToken = info.sessionToken
+                            )
                         )
-                    )
-                }
-            )
+                    }
+                )
+            }
         }
 
         composable(Screen.Settings.route) {
